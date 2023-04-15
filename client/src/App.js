@@ -3,6 +3,7 @@ import {NavLink, BrowserRouter as Router, Route, Routes, Link} from "react-route
 import './App.css';
 import Home from "./components/Home";
 import map from './img/map.jpeg'
+import MyLikes from "./components/MyLikes";
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -24,10 +25,14 @@ function App() {
                       <Link className='showlink' to='/'>
                           Locations
                       </Link>
+                      <Link className='showlink' to='/my-likes'>
+                          My Liked Locations
+                      </Link>
                   </header>
                   <div className='App-body'>
                       <Routes>
                           <Route exact path='/' element={<Home/>}/>
+                          <Route path='/my-likes' element={<MyLikes/>}/>
                       </Routes>
                   </div>
               </div>

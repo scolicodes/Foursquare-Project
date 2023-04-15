@@ -151,11 +151,12 @@ const resolvers = {
 
                 await client.hSet("pageResultsHash", `Page_${pageNum}`, JSON.stringify(pageInfo));
             }
-            const likedLocsInRedis = await client.lRange('likedLocations', 0, -1);
-            // console.log('redis', likedLocsInRedis);
+            let likedLocsInRedis = await client.lRange('likedLocations', 0, -1);
+            likedLocsInRedis = likedLocsInRedis.map((likedLoc) => JSON.parse(likedLoc));
+
 
             pageInfo.locations = pageInfo.locations.map((location) => {
-                const isLiked = likedLocsInRedis.some(likedLocInRedis => likedLocInRedis === location.id);
+                const isLiked = likedLocsInRedis.some(likedLocInRedis => likedLocInRedis.id === location.id);
                 return {...location, liked: isLiked};
             });
 
@@ -165,9 +166,11 @@ const resolvers = {
         }
         ,
         likedLocations: async () => {
-            const locations = await client.lRange('likedLocations', 0, -1);
-            // console.log(locations);
-            return locations.map((location) => JSON.parse(location));
+            let locations = await client.lRange('likedLocations', 0, -1);
+            locations = locations.map(location => JSON.parse(location));
+            console.log(locations);
+
+            return locations;
         },
         userPostedLocations: async () => {
             const locations = await client.lRange('userPostedLocations', 0, -1);
@@ -192,15 +195,39 @@ const resolvers = {
         updateLocation: async(_, {id, image, name, address, userPosted, liked}) => {
 
             let newLocation = {
-                id: id
+                id: id,
+                image: image,
+                name: name,
+                address: address,
+                userPosted: userPosted,
+                liked: liked
             };
 
             if (liked === true) {
-                await client.rPush('likedLocations', id);
+                await client.rPush('likedLocations', JSON.stringify(newLocation));
             }
             else {
-                await client.lRem('likedLocations', 1, id);
+                let likedLocations = await client.lRange('likedLocations', 0, -1);
+
+
+                const locationToRemove = likedLocations.find((likedLocationString) => {
+                    const likedLocation = JSON.parse(likedLocationString);
+                    return likedLocation.id === id;
+                });
+
+                console.log(locationToRemove);
+
+                if (locationToRemove) {
+                    await client.lRem('likedLocations', 1, locationToRemove);
+                }
+                else {
+                    console.log('Location with the specified ID not found in likedLocations cache.');
+                }
             }
+
+
+
+            return newLocation;
         },
         deleteLocation: async(_, {id}) => {
             const locationKey = 'userPostedLocations';

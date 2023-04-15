@@ -12,25 +12,49 @@ import Stack from '@mui/material/Stack';
 import Pagination from '@mui/material/Pagination';
 import noImg from '../img/no-image.png';
 
-function Home() {
-    const [currPage, setCurrPage] = useState(1);
-    const [isFirstPage, setIsFirstPage] = useState(true);
-    const [isLastPage, setIsLastPage] = useState(false);
-    const {loading, error, data} = useQuery(queries.LOCATION_POSTS_QUERY, {
-        variables: { pageNum: currPage },
+function MyLikes() {
+    const [currPageNum, setCurrPageNum] = useState(1);
+    const locationsPerPage = 10;
+    const [currPageLocs, setCurrPageLocs] = useState(null);
+    const [numOfPages, setNumOfPages] = useState(null);
+    const {loading, error, data} = useQuery(queries.LIKED_LOCATIONS_QUERY, {
         fetchPolicy: 'cache-and-network',
     });
 
     useEffect(() => {
+        console.log('titties');
         if (data) {
-            const {locationPosts} = data;
-            if (!locationPosts.nextLink) {
-                setIsLastPage(true);
+            const {likedLocations} = data;
+            // console.log(likedLocations);
+            const numPages = Math.ceil(likedLocations.length/locationsPerPage);
+            if (numOfPages !== numPages) setNumOfPages(numPages);
+
+
+
+            let startIndex = (currPageNum - 1) * locationsPerPage;
+            let endIndex = startIndex + locationsPerPage;
+
+
+            console.log(startIndex, endIndex);
+
+            if (endIndex > likedLocations) {
+                endIndex = -1;
             }
+
+            setCurrPageLocs(likedLocations.slice(startIndex, endIndex));
 
         }
 
     }, [data]);
+
+    // useEffect(() => {
+    //     console.log(currPageLocs);
+    //
+    //
+    //
+    //
+    // }, [numOfPages]);
+
 
     useEffect(() => {
         if (error) {
@@ -40,26 +64,27 @@ function Home() {
     }, [error]);
 
     useEffect(() => {
-        if (currPage === 1) {
-            setIsFirstPage(true);
-            setIsLastPage(false);
-        }
-        else {
-            setIsFirstPage(false);
-        }
-        // console.log(currPage);
 
-    }, [currPage]);
+        const startIndex = (currPageNum - 1) * locationsPerPage;
+        const endIndex = startIndex + locationsPerPage;
+        if (data) {
+            const {likedLocations} = data;
+            setCurrPageLocs(likedLocations.slice(startIndex, endIndex));
+        }
+
+
+    }, [currPageNum]);
+
 
 
     const [updateLocation] = useMutation(queries.UPDATE_LOCATION_MUTATION, {
         refetchQueries: [
             {
-                query: queries.LOCATION_POSTS_QUERY,
-                variables: {pageNum: currPage}
+                query: queries.LIKED_LOCATIONS_QUERY,
             }
         ]
     });
+
 
     const handleLikeButtonClick = async (location) => {
         // console.log(location.liked);
@@ -76,13 +101,8 @@ function Home() {
         });
     };
 
-    const handleNextPage = () => {
-        setCurrPage(currPage + 1);
-    };
-
-    const handlePrevPage = () => {
-        setCurrPage(currPage - 1);
-        setIsLastPage(false);
+    const handlePageChange = (event, page) => {
+        setCurrPageNum(page);
     };
 
 
@@ -121,37 +141,33 @@ function Home() {
     if (error) return <p>Error :(</p>;
 
     let card;
-    if (data.locationPosts.locations) {
-        card = data.locationPosts.locations.map((location) => {
-            return buildCard(location);
-        });
+    console.log(currPageLocs);
+    if(currPageLocs) {
+        if (currPageLocs.length === 0) {
+            return (<p>You have no liked locations</p>);
+        }
+        else {
+            card = currPageLocs.map((location) => {
+                return buildCard(location);
+            });
+        }
     }
+
 
     return (
         <div>
-            {!isFirstPage && (
-                <Button className="showlink2" onClick={handlePrevPage}>
-                    Prev
-                </Button>
+            {currPageLocs && currPageLocs.length > 0 && (
+                <Stack spacing={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                    <Pagination
+                        count={numOfPages}
+                        variant="outlined"
+                        shape="rounded"
+                        sx={{ "& .MuiPaginationItem-root": { margin: "0" } }}
+                        page={currPageNum}
+                        onChange={handlePageChange}
+                    />
+                </Stack>
             )}
-            {!isLastPage && (
-
-                <Button className="showlink2" onClick={handleNextPage}>
-                    Next
-                </Button>
-            )}
-            {/*<Stack spacing={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>*/}
-            {/*    <Pagination*/}
-            {/*        count={numOfPages}*/}
-            {/*        variant="outlined"*/}
-            {/*        shape="rounded"*/}
-            {/*        sx={{ "& .MuiPaginationItem-root": { margin: "0" } }}*/}
-            {/*        page={currPageNum}*/}
-            {/*        onChange={handlePageChange}*/}
-            {/*    />*/}
-            {/*</Stack>*/}
-            <br />
-            <br />
             <Grid
                 container
                 spacing={2}
@@ -166,4 +182,4 @@ function Home() {
     );
 }
 
-export default Home;
+export default MyLikes;
