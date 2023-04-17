@@ -71,15 +71,19 @@ col-md-4 {
 
 .showlink2 {
   padding: 0.4rem 0.8rem;
-  background-color: #1e8678;
+  background-color: grey;
   border-radius: 3px;
   color: white;
   text-decoration: none !important;
-  margin: 20px;
+  margin: 40px;
+  border: 1px solid darkorange;
 }
 
 .showlink:hover {
   background-color: white;
+}
+.showlink2:hover {
+  color: darkorange;
 }
 
 li {

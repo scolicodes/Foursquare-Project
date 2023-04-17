@@ -13,7 +13,7 @@ import Pagination from '@mui/material/Pagination';
 import noImg from '../img/no-image.png';
 
 function Home() {
-    const [currPage, setCurrPage] = useState(1);
+    const [currPage, setCurrPage] = useState(2);
     const [isFirstPage, setIsFirstPage] = useState(true);
     const [isLastPage, setIsLastPage] = useState(false);
     const {loading, error, data} = useQuery(queries.LOCATION_POSTS_QUERY, {
@@ -118,7 +118,9 @@ function Home() {
     };
 
     if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error :(</p>;
+    if (error) return (
+        <p>Error: {error.message}</p>
+    );
 
     let card;
     if (data.locationPosts.locations) {
@@ -140,16 +142,7 @@ function Home() {
                     Next
                 </Button>
             )}
-            {/*<Stack spacing={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>*/}
-            {/*    <Pagination*/}
-            {/*        count={numOfPages}*/}
-            {/*        variant="outlined"*/}
-            {/*        shape="rounded"*/}
-            {/*        sx={{ "& .MuiPaginationItem-root": { margin: "0" } }}*/}
-            {/*        page={currPageNum}*/}
-            {/*        onChange={handlePageChange}*/}
-            {/*    />*/}
-            {/*</Stack>*/}
+
             <br />
             <br />
             <Grid

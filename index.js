@@ -113,6 +113,7 @@ type Location {
     address: String
     userPosted: Boolean!
     liked: Boolean!
+    distance: Int!
 }
 type Query {
     locationPosts(pageNum: Int): LocationPostResult
@@ -120,7 +121,7 @@ type Query {
     userPostedLocations: [Location]
 }
 type Mutation {
-    uploadLocation(image: String!, address: String, name: String): Location
+    uploadLocation(image: String!, address: String, name: String!): Location
     updateLocation(id: ID!, image: String, name: String, address: String, userPosted: Boolean, liked: Boolean): Location
     deleteLocation(id: ID!): Location
 
@@ -173,13 +174,26 @@ const resolvers = {
             return locations;
         },
         userPostedLocations: async () => {
-            const locations = await client.lRange('userPostedLocations', 0, -1);
-            return locations.map(location => JSON.parse(location));
+            let locations = await client.lRange('userPostedLocations', 0, -1);
+            locations = locations.map((location) => JSON.parse(location));
+
+            let likedLocsInRedis = await client.lRange('likedLocations', 0, -1);
+            likedLocsInRedis = likedLocsInRedis.map((likedLoc) => JSON.parse(likedLoc));
+
+
+            console.log(locations);
+            locations = locations.map((location) => {
+                const isLiked = likedLocsInRedis.some(likedLocInRedis => likedLocInRedis.id === location.id);
+                return {...location, liked: isLiked};
+            });
+
+            return locations;
         }
 
     },
     Mutation: {
         uploadLocation: async(_, {image, address, name}) => {
+            console.log(5);
             const newLocation = {
                 id: uuid.v4(),
                 image: image,

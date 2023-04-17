@@ -11,35 +11,39 @@ import {useState} from 'react';
 import Stack from '@mui/material/Stack';
 import Pagination from '@mui/material/Pagination';
 import noImg from '../img/no-image.png';
+import DeleteLocationModal from "./modals/DeleteLocationModal";
+import {Link} from "react-router-dom";
 
-function MyLikes() {
+function MyLocations() {
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteLocation, setDeleteLocation] = useState(null);
     const [currPageNum, setCurrPageNum] = useState(1);
     const locationsPerPage = 10;
-    const [currPageLocs, setCurrPageLocs] = useState();
+    const [currPageLocs, setCurrPageLocs] = useState(null);
     const [numOfPages, setNumOfPages] = useState(null);
-    const {loading, error, data} = useQuery(queries.LIKED_LOCATIONS_QUERY, {
+    const {loading, error, data} = useQuery(queries.USER_POSTED_LOCATIONS_QUERY, {
         fetchPolicy: 'cache-and-network',
     });
 
     useEffect(() => {
         if (data) {
-            const {likedLocations} = data;
-            // console.log(likedLocations);
-            const numPages = Math.ceil(likedLocations.length/locationsPerPage);
+            const {userPostedLocations} = data;
+            const numPages = Math.ceil(userPostedLocations.length/locationsPerPage);
             setNumOfPages(numPages);
+
 
 
             let startIndex = (currPageNum - 1) * locationsPerPage;
             let endIndex = startIndex + locationsPerPage;
 
 
-            // console.log(startIndex, endIndex);
+            console.log(startIndex, endIndex);
 
-            if (endIndex > likedLocations) {
+            if (endIndex > userPostedLocations) {
                 endIndex = -1;
             }
 
-            setCurrPageLocs(likedLocations.slice(startIndex, endIndex));
+            setCurrPageLocs(userPostedLocations.slice(startIndex, endIndex));
 
         }
 
@@ -54,12 +58,16 @@ function MyLikes() {
     }, [error]);
 
     useEffect(() => {
-
-        const startIndex = (currPageNum - 1) * locationsPerPage;
-        const endIndex = startIndex + locationsPerPage;
         if (data) {
-            const {likedLocations} = data;
-            setCurrPageLocs(likedLocations.slice(startIndex, endIndex));
+            const {userPostedLocations} = data;
+
+            let startIndex = (currPageNum - 1) * locationsPerPage;
+            let endIndex = startIndex + locationsPerPage;
+
+            if (endIndex > userPostedLocations) {
+                endIndex = -1;
+            }
+            setCurrPageLocs(userPostedLocations.slice(startIndex, endIndex));
         }
 
 
@@ -70,7 +78,7 @@ function MyLikes() {
     const [updateLocation] = useMutation(queries.UPDATE_LOCATION_MUTATION, {
         refetchQueries: [
             {
-                query: queries.LIKED_LOCATIONS_QUERY,
+                query: queries.USER_POSTED_LOCATIONS_QUERY,
             }
         ]
     });
@@ -95,6 +103,14 @@ function MyLikes() {
         setCurrPageNum(page);
     };
 
+    const handleOpenDeleteModal = (location) => {
+        setShowDeleteModal(true);
+        setDeleteLocation(location);
+    };
+
+    const handleCloseModal = () => {
+        setShowDeleteModal(false);
+    };
 
 
     const buildCard = (location) => {
@@ -121,6 +137,9 @@ function MyLikes() {
                         <Button size="small" color="primary" onClick={() => handleLikeButtonClick(location)}>
                             {location.liked ? 'Remove like' : "Like"}
                         </Button>
+                        <Button size="small" color="primary" onClick={() => handleOpenDeleteModal(location)}>
+                            Delete
+                        </Button>
                     </CardActions>
                 </Card>
             </Grid>
@@ -133,9 +152,8 @@ function MyLikes() {
     );
 
     let card;
-    // console.log(currPageLocs);
+
     if(currPageLocs) {
-        console.log(currPageLocs);
         if (currPageLocs.length === 0) {
             if (numOfPages < currPageNum) {
                 setCurrPageNum(currPageNum - 1);
@@ -143,7 +161,6 @@ function MyLikes() {
             else {
                 return (<p>You have no liked locations</p>);
             }
-
         }
         else {
             card = currPageLocs.map((location) => {
@@ -155,6 +172,9 @@ function MyLikes() {
 
     return (
         <div>
+            <br/>
+            <Link className='showlink2' to={'/new-location'}>Add a new location</Link>
+            <br/>
             {currPageLocs && currPageLocs.length > 0 && (
                 <Stack spacing={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                     <Pagination
@@ -177,8 +197,11 @@ function MyLikes() {
             >
                 {card}
             </Grid>
+            {showDeleteModal && (
+                <DeleteLocationModal isOpen={showDeleteModal} handleClose={handleCloseModal} deleteLocation={deleteLocation}/>
+            )}
         </div>
     );
 }
 
-export default MyLikes;
+export default MyLocations;

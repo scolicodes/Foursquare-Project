@@ -4,6 +4,9 @@ import './App.css';
 import Home from "./components/Home";
 import map from './img/map.jpeg'
 import MyLikes from "./components/MyLikes";
+import MyLocations from "./components/MyLocations";
+import AddLocation from "./components/AddLocation";
+import Distance from "./components/Distance";
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -26,13 +29,25 @@ function App() {
                           Locations
                       </Link>
                       <Link className='showlink' to='/my-likes'>
-                          My Liked Locations
+                          Liked Locations
+                      </Link>
+                      <Link className='showlink' to='/my-locations'>
+                          My Locations
+                      </Link>
+                      <Link className='showlink' to='/new-location'>
+                          Add a New Location
+                      </Link>
+                      <Link className='showlink' to='/distance'>
+                          Distance
                       </Link>
                   </header>
                   <div className='App-body'>
                       <Routes>
                           <Route exact path='/' element={<Home/>}/>
                           <Route path='/my-likes' element={<MyLikes/>}/>
+                          <Route path='/new-location' element={<AddLocation/>}/>
+                          <Route path='/my-locations' element={<MyLocations/>}/>
+                          <Route path='/distance' element={<Distance/>}/>
                       </Routes>
                   </div>
               </div>

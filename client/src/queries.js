@@ -27,7 +27,19 @@ const LIKED_LOCATIONS_QUERY = gql`
       liked
     }
   }
+`;
 
+const USER_POSTED_LOCATIONS_QUERY = gql`
+    query {
+    userPostedLocations {
+      id
+      image
+      name
+      address
+      userPosted
+      liked
+    }
+  }
 `;
 
 const UPDATE_LOCATION_MUTATION = gql`
@@ -39,10 +51,31 @@ const UPDATE_LOCATION_MUTATION = gql`
   }
 `;
 
+const UPLOAD_LOCATION_MUTATION = gql`
+  mutation UploadLocation($image: String!, $address: String, $name: String!) {
+    uploadLocation(image: $image, address: $address, name: $name) {
+      id
+      name
+    }
+  }
+`;
+
+const DELETE_LOCATION_MUTATION = gql`
+  mutation DeleteLocation($id: ID!) {
+    deleteLocation(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
 let exported = {
     LOCATION_POSTS_QUERY,
     UPDATE_LOCATION_MUTATION,
-    LIKED_LOCATIONS_QUERY
+    LIKED_LOCATIONS_QUERY,
+    UPLOAD_LOCATION_MUTATION,
+    USER_POSTED_LOCATIONS_QUERY,
+    DELETE_LOCATION_MUTATION
 };
 
 export default exported;
