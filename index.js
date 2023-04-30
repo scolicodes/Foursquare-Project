@@ -4,54 +4,30 @@ const lodash = require('lodash');
 const uuid = require('uuid');
 const redis = require('redis');
 const client = redis.createClient();
+require('dotenv').config();
+
 client.connect().then(() => {});
 const axios = require('axios');
 
 const headers = {
     Accept: 'application/json',
-    Authorization: 'fsq37hPhcQUPsfJvWmCfcRREMmRZI07Cwn37GE2Ck/O9WCE='
+    Authorization: process.env.AUTHORIZATION_KEY
 };
 
 
-
-
-
-// async function getApiData(url = 'https://api.foursquare.com/v3/places/search') {
-//     let locations = [];
-//
-//     const response = await axios.get(url, { headers });
-//
-//     const places = response.data.results.map(async (place) => {
-//         const image = await getImageUrl(headers, place.fsq_id);
-//         return {
-//             id: place.fsq_id,
-//             image: image,
-//             name: place.name,
-//             address: place.location.address,
-//             userPosted: false,
-//             liked: false,
-//         };
-//     });
-//
-//     locations = locations.concat(await Promise.all(places));
-//
-//     // console.log(response.headers);
-//     // console.log(response.headers.link);
-//
-//     if (response.headers && response.headers.link) {
-//         const linkHeader = response.headers.link;
-//         const nextLink = linkHeader.match(/<([^>]*)>/)[1];
-//         const nextLocations = await getApiData(nextLink);
-//         locations = locations.concat(nextLocations);
-//     }
-//
-//     return locations;
-// }
-
 async function getApiData(url, nextPageNum) {
-    console.log(nextPageNum);
+    console.log(url);
 
-    const response = await axios.get(url, { headers });
+    let response;
+    try {
+        response = await axios.get(url, { headers });
+    }
+    catch (e) {
+        console.log(e);
+    }
+
+    console.log(response);
+
 
 
     const locations = await Promise.all(response.data.results.map(async (place) => {
@@ -100,6 +76,25 @@ const getImageUrl = async (headers, id) => {
     }
 };
 
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 3958.8; // Earth's radius in miles
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+     // Distance in miles
+    return R * c;
+}
+
+function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
 // Type Definitions
 const typeDefs = gql`
 type LocationPostResult {
@@ -119,6 +114,7 @@ type Query {
     locationPosts(pageNum: Int): LocationPostResult
     likedLocations: [Location]
     userPostedLocations: [Location]
+    getTopTenClosestLocations(latitude: Float, longitude: Float): [Location]
 }
 type Mutation {
     uploadLocation(image: String!, address: String, name: String!): Location
@@ -146,7 +142,6 @@ const resolvers = {
             }
             else {
                 let url = await client.hGet('pageUrls', `Page_${pageNum}`);
-
 
                 pageInfo = await getApiData(url, pageNum + 1);
 
@@ -188,8 +183,35 @@ const resolvers = {
             });
 
             return locations;
-        }
+        },
+        getTopTenClosestLocations: async (_, {latitude, longitude}) => {
+            let likedLocsInRedis = await client.lRange('likedLocations', 0, -1);
+            likedLocsInRedis = likedLocsInRedis.map((likedLoc) => JSON.parse(likedLoc));
 
+            // Remove the old topTenClosestLocations set before calculating the new top 10
+            await client.del('topTenClosestLocations');
+
+            for (const loc of likedLocsInRedis) {
+                const {data} = await axios.get(`https://api.foursquare.com/v3/places/${loc.id}`, {headers});
+                const locCoords = data.geocodes.main;
+
+                let distance = getDistance(latitude, longitude, locCoords.latitude, locCoords.longitude);  // In miles
+                distance = parseInt(distance);
+
+                let updatedLoc = {...loc, distance: distance};
+                updatedLoc = JSON.stringify(updatedLoc);
+
+                try {
+                    await client.zAdd('topTenClosestLocations', [{score: distance, value: updatedLoc}]);
+                }
+                catch (e) {
+                    console.log(e.message);
+                }
+            }
+
+            const top10Closest = await client.zRange("topTenClosestLocations", 0, 9);
+            return top10Closest.map(loc => JSON.parse(loc));
+        }
     },
     Mutation: {
         uploadLocation: async(_, {image, address, name}) => {
@@ -214,7 +236,7 @@ const resolvers = {
                 name: name,
                 address: address,
                 userPosted: userPosted,
-                liked: liked
+                liked: liked,
             };
 
             if (liked === true) {

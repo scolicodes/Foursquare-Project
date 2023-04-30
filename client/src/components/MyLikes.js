@@ -33,8 +33,9 @@ function MyLikes() {
             let endIndex = startIndex + locationsPerPage;
 
 
-            // console.log(startIndex, endIndex);
+            // console.log(currPageNum);
 
+            // console.log(startIndex, endIndex);
             if (endIndex > likedLocations) {
                 endIndex = -1;
             }
@@ -133,11 +134,13 @@ function MyLikes() {
     );
 
     let card;
-    // console.log(currPageLocs);
+    console.log(currPageLocs);
     if(currPageLocs) {
-        console.log(currPageLocs);
+        // console.log(currPageLocs);
         if (currPageLocs.length === 0) {
-            if (numOfPages < currPageNum) {
+            console.log(numOfPages);
+            console.log(currPageNum);
+            if (numOfPages < currPageNum && currPageNum > 1) {
                 setCurrPageNum(currPageNum - 1);
             }
             else {

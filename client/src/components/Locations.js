@@ -12,8 +12,8 @@ import Stack from '@mui/material/Stack';
 import Pagination from '@mui/material/Pagination';
 import noImg from '../img/no-image.png';
 
-function Home() {
-    const [currPage, setCurrPage] = useState(2);
+function Locations() {
+    const [currPage, setCurrPage] = useState(1);
     const [isFirstPage, setIsFirstPage] = useState(true);
     const [isLastPage, setIsLastPage] = useState(false);
     const {loading, error, data} = useQuery(queries.LOCATION_POSTS_QUERY, {
@@ -159,4 +159,4 @@ function Home() {
     );
 }
 
-export default Home;
+export default Locations;

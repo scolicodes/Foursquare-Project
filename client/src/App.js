@@ -1,7 +1,7 @@
 import {ApolloClient, HttpLink, InMemoryCache, ApolloProvider} from "@apollo/client";
 import {NavLink, BrowserRouter as Router, Route, Routes, Link} from "react-router-dom";
 import './App.css';
-import Home from "./components/Home";
+import Locations from "./components/Locations";
 import map from './img/map.jpeg'
 import MyLikes from "./components/MyLikes";
 import MyLocations from "./components/MyLocations";
@@ -25,6 +25,7 @@ function App() {
                       <h1 className='App-title'>
                           Welcome to BoreSquare
                       </h1>
+                      <br/>
                       <Link className='showlink' to='/'>
                           Locations
                       </Link>
@@ -43,7 +44,7 @@ function App() {
                   </header>
                   <div className='App-body'>
                       <Routes>
-                          <Route exact path='/' element={<Home/>}/>
+                          <Route exact path='/' element={<Locations/>}/>
                           <Route path='/my-likes' element={<MyLikes/>}/>
                           <Route path='/new-location' element={<AddLocation/>}/>
                           <Route path='/my-locations' element={<MyLocations/>}/>

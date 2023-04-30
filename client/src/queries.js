@@ -16,6 +16,20 @@ const LOCATION_POSTS_QUERY = gql`
   }
 `;
 
+const GET_TOP_TEN = gql`
+    query($latitude: Float, $longitude: Float) {
+    getTopTenClosestLocations(latitude: $latitude, longitude: $longitude) {
+      id
+      image
+      name
+      address
+      userPosted
+      liked
+      distance
+    }
+  }
+`;
+
 const LIKED_LOCATIONS_QUERY = gql`
     query {
     likedLocations {
@@ -75,7 +89,8 @@ let exported = {
     LIKED_LOCATIONS_QUERY,
     UPLOAD_LOCATION_MUTATION,
     USER_POSTED_LOCATIONS_QUERY,
-    DELETE_LOCATION_MUTATION
+    DELETE_LOCATION_MUTATION,
+    GET_TOP_TEN
 };
 
 export default exported;

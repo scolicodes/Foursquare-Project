@@ -37,7 +37,7 @@ function MyLocations() {
             let endIndex = startIndex + locationsPerPage;
 
 
-            console.log(startIndex, endIndex);
+            console.log(currPageNum);
 
             if (endIndex > userPostedLocations) {
                 endIndex = -1;
@@ -155,11 +155,19 @@ function MyLocations() {
 
     if(currPageLocs) {
         if (currPageLocs.length === 0) {
-            if (numOfPages < currPageNum) {
+            if (numOfPages < currPageNum && currPageNum > 1) {
                 setCurrPageNum(currPageNum - 1);
             }
             else {
-                return (<p>You have no liked locations</p>);
+                return (
+                    <div>
+                        <br/>
+                        <br/>
+                        <p>You have no locations</p>
+                        <br/>
+                        <Link className='showlink2' to={'/new-location'}>Add a new location</Link>
+                    </div>
+                );
             }
         }
         else {
